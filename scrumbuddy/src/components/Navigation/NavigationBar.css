@@ -1,0 +1,29 @@
+/* src/components/SideNavBar/SideNavbar.css */
+.side-navbar {
+    width: 250px;
+    height: 100vh;
+    background-color: #4c87ca;
+    padding: 20px;
+    position: fixed;
+    color: white;
+  }
+  
+  .side-navbar ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .side-navbar li {
+    margin: 20px 0;
+  }
+  
+  .side-navbar a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2em;
+  }
+  
+  .side-navbar a:hover {
+    text-decoration: underline;
+  }
+  

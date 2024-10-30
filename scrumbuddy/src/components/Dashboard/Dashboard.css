@@ -1,0 +1,38 @@
+.dashboard-container {
+  padding: 20px;
+}
+
+.weekly-tasks-container {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f7f7f7;
+  border-radius: 8px;
+}
+
+.weekly-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.day-tasks {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.day-tasks h3 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.task-item {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 5px;
+}
+
+.task-item h4 {
+  margin: 0 0 5px;
+}

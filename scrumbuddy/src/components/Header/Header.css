@@ -1,0 +1,19 @@
+/* src/components/Header.css */
+.app-header {
+    height: 60px;
+    width: 100%;
+    background-color: #ffffff;
+    color: #00b4d8; /* Blue for ScrumBuddy branding */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 250px; /* Offset for side navbar */
+    position: fixed;
+    top: 0;
+  }
+  
+  .header-title {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
