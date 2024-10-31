@@ -1,29 +1,41 @@
-/* src/components/SideNavBar/SideNavbar.css */
-.side-navbar {
-    width: 250px;
-    height: 100vh;
-    background-color: #4c87ca;
-    padding: 20px;
-    position: fixed;
-    color: white;
-  }
-  
-  .side-navbar ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .side-navbar li {
-    margin: 20px 0;
-  }
-  
-  .side-navbar a {
-    color: white;
-    text-decoration: none;
-    font-size: 1.2em;
-  }
-  
-  .side-navbar a:hover {
-    text-decoration: underline;
-  }
-  
+/* NavigationBar.css */
+
+/* Navigation Bar styling */
+.navigation-bar {
+  width: 260px;
+  height: 100vh;
+  background-color: #cce7ff; /* Light blue background */
+  padding-top: 20px;
+  position: fixed;
+}
+
+.navigation-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navigation-links li {
+  padding: 10px 20px;
+}
+
+/* Updated styling for navigation links */
+.navigation-links a,
+.logout-link {
+  text-decoration: none;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: block;
+  padding: 10px 0;
+  width: 100%;
+  text-align: left;
+}
+
+.navigation-links a:hover,
+.logout-link:hover {
+  color: #007bff;
+}

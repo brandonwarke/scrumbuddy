@@ -1,41 +1,38 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { auth } from "../../firebase";
-import { signOut } from "firebase/auth";
 import "./NavigationBar.css";
 
 const NavigationBar = () => {
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      console.log("User logged out successfully");
-      navigate("/login"); // Redirect to login or home page after logout
-    } catch (error) {
-      console.error("Error logging out: ", error);
-    }
+  const handleLogout = () => {
+    auth.signOut();
   };
 
   return (
-    <div className="navigation-bar">
-      <h2>ScrumBuddy</h2>
-      <ul>
+    <nav className="navigation-bar">
+      <ul className="navigation-links">
         <li>
-          <Link to="/dashboard">Dashboard</Link>
+          <NavLink exact to="/dashboard" activeClassName="active">
+            Dashboard
+          </NavLink>
         </li>
         <li>
-          <Link to="/tasks">Tasks</Link>
+          <NavLink to="/tasks" activeClassName="active">
+            Tasks
+          </NavLink>
         </li>
         <li>
-          <Link to="/goals">Goals</Link>
+          <NavLink to="/goals" activeClassName="active">
+            Goals
+          </NavLink>
         </li>
-        {/* Add more links as needed */}
+        <li>
+          <button className="logout-link" onClick={handleLogout}>
+            Log Out
+          </button>
+        </li>
       </ul>
-      <button onClick={handleLogout} className="logout-button">
-        Log Out
-      </button>
-    </div>
+    </nav>
   );
 };
 

@@ -1,38 +1,49 @@
 .dashboard-container {
+  margin-left: 15px; /* Add margin to adjust for the side navbar */
   padding: 20px;
 }
 
-.weekly-tasks-container {
+.tasks-section-container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
-  padding: 15px;
-  background-color: #f7f7f7;
-  border-radius: 8px;
 }
 
-.weekly-tasks {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.tasks-section-header {
+  margin-bottom: 15px;
 }
 
-.day-tasks {
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
+.tasks-section {
+  margin-top: 20px;
 }
 
-.day-tasks h3 {
-  font-size: 1.2em;
+.tasks-for-day {
+  margin-bottom: 30px;
+}
+
+.tasks-for-day h4 {
+  font-size: 1.5rem;
+  color: #333;
   margin-bottom: 10px;
 }
 
 .task-item {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 10px;
-  margin-bottom: 5px;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
 }
 
-.task-item h4 {
-  margin: 0 0 5px;
+.task-item h5 {
+  font-size: 1rem;
+  color: #000000;
+  margin: 0 0 5px 0;
+}
+
+.task-item p {
+  margin: 5px 0;
+  color: #666;
 }
