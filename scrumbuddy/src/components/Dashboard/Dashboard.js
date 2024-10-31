@@ -1,16 +1,32 @@
+// src/components/Dashboard/Dashboard.js
 import React, { useEffect, useState } from "react";
 import { collection, query, where, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LabelList,
+  Cell,
+} from "recharts";
+import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [user] = useAuthState(auth);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
 
+    // Fetch tasks for today and tomorrow
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -20,13 +36,13 @@ const Dashboard = () => {
       tomorrow.toISOString().split("T")[0],
     ];
 
-    const q = query(
+    const tasksQuery = query(
       collection(db, "tasks"),
       where("userId", "==", user.uid),
       where("dueDate", "in", datesOfInterest)
     );
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribeTasks = onSnapshot(tasksQuery, (querySnapshot) => {
       const tasksArray = [];
       querySnapshot.forEach((doc) => {
         tasksArray.push({ id: doc.id, ...doc.data() });
@@ -34,7 +50,21 @@ const Dashboard = () => {
       setTasks(tasksArray);
     });
 
-    return () => unsubscribe();
+    // Fetch goals
+    const goalsQuery = query(collection(db, "goals"), where("userId", "==", user.uid));
+    const unsubscribeGoals = onSnapshot(goalsQuery, (querySnapshot) => {
+      const goalsArray = [];
+      querySnapshot.forEach((doc) => {
+        goalsArray.push({ id: doc.id, ...doc.data() });
+      });
+      setGoals(goalsArray);
+    });
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      unsubscribeTasks();
+      unsubscribeGoals();
+    };
   }, [user]);
 
   const markAsDone = async (taskId) => {
@@ -58,12 +88,16 @@ const Dashboard = () => {
         .split("T")[0]
   );
 
+  const colors = ["#8884d8", "#82ca9d", "#ffc658"];
+
   return (
     <div className="dashboard-container">
       <h2>Dashboard</h2>
+
+      {/* Tasks Section */}
       <div className="tasks-box">
         <h3>Tasks for the Next 2 Days</h3>
-        
+
         <div className="tasks-day-section">
           <h4>Today</h4>
           {todayTasks.length === 0 ? (
@@ -95,6 +129,36 @@ const Dashboard = () => {
             ))
           )}
         </div>
+      </div>
+
+      {/* Goals Section */}
+      <div className="goals-section">
+        <h3>Your Goals Progress</h3>
+        {goals.length === 0 ? (
+          <p>No goals set.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={goals}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="goalName" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Bar
+                dataKey="progress"
+                onClick={(data) => navigate(`/goals/edit/${data.id}`)}
+                style={{ cursor: "pointer" }}
+              >
+                {goals.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                ))}
+                <LabelList dataKey="progress" position="top" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import "./Tasks.css";
@@ -27,6 +27,16 @@ const TaskList = () => {
     return () => unsubscribe();
   }, [user]);
 
+  // Function to handle deletion of a task
+  const deleteTask = async (taskId) => {
+    try {
+      await deleteDoc(doc(db, "tasks", taskId));
+      console.log("Task successfully deleted!");
+    } catch (e) {
+      console.error("Error deleting task: ", e);
+    }
+  };
+
   return (
     <div className="task-list">
       {tasks.length === 0 ? (
@@ -38,6 +48,9 @@ const TaskList = () => {
             <p>{task.description}</p>
             <p>Due Date: {task.dueDate}</p>
             <p>Priority: {task.priority}</p>
+            <button onClick={() => deleteTask(task.id)} className="delete-task-button">
+              Delete Task
+            </button>
           </div>
         ))
       )}

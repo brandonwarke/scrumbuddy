@@ -1,57 +1,79 @@
-/* src/components/Tasks/Tasks.css */
 .tasks-container {
-    padding: 20px;
-    max-width: 800px;
-    margin: auto;
-  }
-  
-  .task-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .task-form input,
-  .task-form textarea,
-  .task-form select,
-  .task-form button {
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-  }
-  
-  .task-form button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .task-form button:hover {
-    background-color: #0056b3;
-  }
-  
-  .task-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .task-item {
-    padding: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-  }
-  
-  .task-item h3 {
-    margin: 0 0 10px;
-  }
-  
-  .task-item p {
-    margin: 5px 0;
-  }
-  
+  padding: 20px;
+  max-width: 600px; /* Reducing width for better balance */
+  margin: auto;
+}
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #f1f1f1; /* Light background for the form */
+}
+
+.task-form input,
+.task-form textarea,
+.task-form select,
+.task-form button {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.task-form button {
+  align-self: flex-start; /* Align button to the left */
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px; /* Spacing to separate from inputs */
+}
+
+.task-form button:hover {
+  background-color: #0056b3;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.task-item {
+  padding: 20px; /* Increase padding for better spacing */
+  border: 1px solid #ccc;
+  border-radius: 10px; /* Rounded corners */
+  background-color: #fff; /* White background for contrast */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
+}
+
+.task-item h3 {
+  margin: 0 0 10px;
+  font-size: 18px; /* Increase the heading size */
+}
+
+.task-item p {
+  margin: 5px 0;
+  color: #666; /* Lighter text color for descriptions */
+}
+
+.delete-task-button {
+  background-color: #dc3545; /* Red color for delete action */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px; /* Spacing to separate from content */
+}
+
+.delete-task-button:hover {
+  background-color: #c82333;
+}

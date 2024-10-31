@@ -14,8 +14,6 @@ const TaskForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent the form from refreshing
 
-    console.log("Form Submitted");
-
     if (!taskName) {
       console.error("Task name is required");
       return;
@@ -34,8 +32,6 @@ const TaskForm = () => {
       userId: user.uid, // Associate the task with the logged-in user
       createdAt: new Date(),
     };
-
-    console.log("Attempting to add task:", newTask);
 
     try {
       // Add the task to Firestore
