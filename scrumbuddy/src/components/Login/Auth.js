@@ -1,62 +1,54 @@
-// src/components/Auth.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { auth } from "../../firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import "./Auth.css"; // Import custom styles
-
+import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
+import { useNavigate, Link } from "react-router-dom";
+import "./Auth.css";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(true);
+  const [signInWithEmailAndPassword, user, loading, error] = useSignInWithEmailAndPassword(auth);
+  const navigate = useNavigate(); // Use useNavigate to handle redirection
 
-  const handleSubmit = async (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    try {
-      if (isSignUp) {
-        // Sign up new user
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert("User signed up successfully");
-      } else {
-        // Sign in existing user
-        await signInWithEmailAndPassword(auth, email, password);
-        alert("User signed in successfully");
-      }
-    } catch (error) {
-      console.error("Error during authentication:", error.message);
-      alert(error.message);
-    }
+    await signInWithEmailAndPassword(email, password);
   };
 
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
   return (
-    <div className="auth-page">
-      <div className="auth-container">
-        <h2>{isSignUp ? "Sign Up" : "Sign In"}</h2>
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="input-group">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="input-group">
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="auth-button">{isSignUp ? "Sign Up" : "Sign In"}</button>
+    <div className="auth-container">
+      <h2>Sign In</h2>
+      {error && <p className="error">{error.message}</p>}
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <form onSubmit={handleSignIn}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="submit">Sign In</button>
         </form>
-        <button onClick={() => setIsSignUp(!isSignUp)} className="switch-button">
-          {isSignUp ? "Switch to Sign In" : "Switch to Sign Up"}
-        </button>
-      </div>
+      )}
+      <p>
+        Don't have an account? <Link to="/signup">Sign Up</Link>
+      </p>
     </div>
   );
 };
