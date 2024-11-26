@@ -1,11 +1,19 @@
+// src/components/Navigation/NavigationBar.js
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import "./NavigationBar.css";
 
 const NavigationBar = () => {
-  const handleLogout = () => {
-    auth.signOut();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut(); // Log out the user
+      navigate("/login"); // Redirect to the login page
+    } catch (error) {
+      console.error("Error during logout: ", error);
+    }
   };
 
   return (
