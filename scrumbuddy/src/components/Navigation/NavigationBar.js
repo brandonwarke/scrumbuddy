@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import "./NavigationBar.css";
 
+
 const NavigationBar = () => {
   const navigate = useNavigate();
 
@@ -34,6 +35,9 @@ const NavigationBar = () => {
             Goals
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/calendar">Calendar</NavLink>
+          </li>
         <li>
           <button className="logout-link" onClick={handleLogout}>
             Log Out
