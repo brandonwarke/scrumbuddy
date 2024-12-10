@@ -1,5 +1,5 @@
-// src/components/Dashboard/Dashboard.js
 import React, { useEffect, useState } from "react";
+import Calendar from "react-calendar";
 import { collection, query, where, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -15,11 +15,13 @@ import {
   Cell,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
+import "react-calendar/dist/Calendar.css";
 import "./Dashboard.css";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [events, setEvents] = useState([]);
   const [user] = useAuthState(auth);
   const navigate = useNavigate();
 
@@ -60,10 +62,24 @@ const Dashboard = () => {
       setGoals(goalsArray);
     });
 
+    // Fetch events
+    const eventsQuery = query(
+      collection(db, "calendarEvents"),
+      where("userId", "==", user.uid)
+    );
+    const unsubscribeEvents = onSnapshot(eventsQuery, (querySnapshot) => {
+      const eventsArray = [];
+      querySnapshot.forEach((doc) => {
+        eventsArray.push({ id: doc.id, ...doc.data() });
+      });
+      setEvents(eventsArray);
+    });
+
     // Cleanup subscriptions on unmount
     return () => {
       unsubscribeTasks();
       unsubscribeGoals();
+      unsubscribeEvents();
     };
   }, [user]);
 
@@ -89,6 +105,15 @@ const Dashboard = () => {
   );
 
   const colors = ["#8884d8", "#82ca9d", "#ffc658"];
+
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const eventOnDate = events.find(
+        (event) => new Date(event.date).toDateString() === date.toDateString()
+      );
+      return eventOnDate ? <span>{eventOnDate.eventName}</span> : null;
+    }
+  };
 
   return (
     <div className="dashboard-container">
@@ -159,6 +184,12 @@ const Dashboard = () => {
             </BarChart>
           </ResponsiveContainer>
         )}
+      </div>
+
+      {/* Calendar Section */}
+      <div className="calendar-section">
+        <h3>Scrum Calendar</h3>
+        <Calendar tileContent={tileContent} />
       </div>
     </div>
   );
