@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import Calendar from "react-calendar";
+import FullCalendar from "@fullcalendar/react";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
 import { collection, query, where, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -15,8 +17,41 @@ import {
   Cell,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
-import "react-calendar/dist/Calendar.css";
 import "./Dashboard.css";
+
+const generateRecurringEvents = (events) => {
+  const today = new Date();
+  const endDate = new Date();
+  endDate.setDate(today.getDate() + 7); // Only display the next 7 days
+
+  const expandedEvents = [];
+
+  events.forEach((event) => {
+    const eventDate = new Date(event.start); // Use `start` field as the base date
+
+    while (eventDate <= endDate) {
+      expandedEvents.push({
+        ...event,
+        start: eventDate.toISOString(), // Use ISO format for FullCalendar
+      });
+
+      // Handle recurrence
+      if (event.recurrence === "daily") {
+        eventDate.setDate(eventDate.getDate() + 1);
+      } else if (event.recurrence === "weekly") {
+        eventDate.setDate(eventDate.getDate() + 7);
+      } else if (event.recurrence === "biweekly") {
+        eventDate.setDate(eventDate.getDate() + 14);
+      } else if (event.recurrence === "monthly") {
+        eventDate.setMonth(eventDate.getMonth() + 1);
+      } else {
+        break; // No recurrence
+      }
+    }
+  });
+
+  return expandedEvents;
+};
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
@@ -67,15 +102,20 @@ const Dashboard = () => {
       collection(db, "calendarEvents"),
       where("userId", "==", user.uid)
     );
+
     const unsubscribeEvents = onSnapshot(eventsQuery, (querySnapshot) => {
-      const eventsArray = [];
-      querySnapshot.forEach((doc) => {
-        eventsArray.push({ id: doc.id, ...doc.data() });
-      });
-      setEvents(eventsArray);
+      const fetchedEvents = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        title: doc.data().eventName,
+        start: doc.data().date + "T" + doc.data().time, // ISO format for FullCalendar
+        recurrence: doc.data().recurrence,
+      }));
+
+      // Generate recurring events
+      const expandedEvents = generateRecurringEvents(fetchedEvents);
+      setEvents(expandedEvents);
     });
 
-    // Cleanup subscriptions on unmount
     return () => {
       unsubscribeTasks();
       unsubscribeGoals();
@@ -105,15 +145,6 @@ const Dashboard = () => {
   );
 
   const colors = ["#8884d8", "#82ca9d", "#ffc658"];
-
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const eventOnDate = events.find(
-        (event) => new Date(event.date).toDateString() === date.toDateString()
-      );
-      return eventOnDate ? <span>{eventOnDate.eventName}</span> : null;
-    }
-  };
 
   return (
     <div className="dashboard-container">
@@ -189,7 +220,18 @@ const Dashboard = () => {
       {/* Calendar Section */}
       <div className="calendar-section">
         <h3>Scrum Calendar</h3>
-        <Calendar tileContent={tileContent} />
+        <FullCalendar
+          plugins={[timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek" // Weekly view
+          events={events}
+          allDaySlot={false} // Disable all-day slot
+          headerToolbar={{
+            left: "",
+            center: "title",
+            right: "",
+          }}
+          height={500} // Calendar height
+        />
       </div>
     </div>
   );
