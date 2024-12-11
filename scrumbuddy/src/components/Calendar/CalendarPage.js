@@ -1,51 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+import React, { useEffect } from 'react';
 import CalendarEventForm from './CalendarEventForm';
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 
-const generateRecurringEvents = (events) => {
-  const today = new Date();
-  const endDate = new Date();
-  endDate.setMonth(today.getMonth() + 3); // Show 3 months ahead
-
-  const expandedEvents = [];
-
-  events.forEach((event) => {
-    const eventDate = new Date(event.date);
-
-    while (eventDate <= endDate) {
-      expandedEvents.push({
-        ...event,
-        date: eventDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
-      });
-
-      // Handle recurrence logic
-      if (event.recurrence === "daily") {
-        eventDate.setDate(eventDate.getDate() + 1);
-      } else if (event.recurrence === "weekly") {
-        eventDate.setDate(eventDate.getDate() + 7);
-      } else if (event.recurrence === "biweekly") {
-        eventDate.setDate(eventDate.getDate() + 14);
-      } else if (event.recurrence === "monthly") {
-        eventDate.setMonth(eventDate.getMonth() + 1);
-      } else {
-        break; // No recurrence
-      }
-    }
-  });
-
-  return expandedEvents;
-};
-
 const CalendarPage = () => {
-  const [events, setEvents] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [user] = useAuthState(auth); // Get the logged-in user
 
-  // Fetch events from Firestore and expand recurring events
+  // Fetch events from Firestore (logic retained for potential future use)
   useEffect(() => {
     if (!user) return;
 
@@ -55,43 +17,17 @@ const CalendarPage = () => {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedEvents = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      const expandedEvents = generateRecurringEvents(fetchedEvents);
-      setEvents(expandedEvents);
+      // You can fetch and process events here if needed in the future
     });
 
     return () => unsubscribe();
   }, [user]);
 
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const eventOnDate = events.find(
-        (event) => new Date(event.date).toDateString() === date.toDateString()
-      );
-      return eventOnDate ? <span>{eventOnDate.eventName}</span> : null;
-    }
-  };
-
   return (
     <div style={{ padding: '20px' }}>
       <h1>Scrum Calendar</h1>
       <CalendarEventForm />
-      <Calendar 
-        onChange={setSelectedDate} 
-        value={selectedDate} 
-        tileContent={tileContent} 
-      />
-      <h2>Scheduled Events</h2>
-      <ul>
-        {events.map((event, index) => (
-          <li key={`${event.id}-${index}`}>
-            <strong>{event.eventName}</strong>: {event.date} at {event.time}
-          </li>
-        ))}
-      </ul>
+      {/* Calendar and scheduled events removed */}
     </div>
   );
 };

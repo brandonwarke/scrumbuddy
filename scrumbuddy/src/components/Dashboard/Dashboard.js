@@ -70,7 +70,6 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch tasks for today and tomorrow
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -87,24 +86,22 @@ const Dashboard = () => {
     );
 
     const unsubscribeTasks = onSnapshot(tasksQuery, (querySnapshot) => {
-      const tasksArray = [];
-      querySnapshot.forEach((doc) => {
-        tasksArray.push({ id: doc.id, ...doc.data() });
-      });
+      const tasksArray = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setTasks(tasksArray);
     });
 
-    // Fetch goals
     const goalsQuery = query(collection(db, "goals"), where("userId", "==", user.uid));
     const unsubscribeGoals = onSnapshot(goalsQuery, (querySnapshot) => {
-      const goalsArray = [];
-      querySnapshot.forEach((doc) => {
-        goalsArray.push({ id: doc.id, ...doc.data() });
-      });
+      const goalsArray = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setGoals(goalsArray);
     });
 
-    // Fetch events
     const eventsQuery = query(
       collection(db, "calendarEvents"),
       where("userId", "==", user.uid)
@@ -114,13 +111,11 @@ const Dashboard = () => {
       const fetchedEvents = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         title: doc.data().eventName,
-        start: doc.data().date + "T" + doc.data().time, // ISO format for FullCalendar
+        start: doc.data().date + "T" + doc.data().time,
         recurrence: doc.data().recurrence,
       }));
 
-      // Generate recurring events
-      const expandedEvents = generateRecurringEvents(fetchedEvents);
-      setEvents(expandedEvents);
+      setEvents(generateRecurringEvents(fetchedEvents));
     });
 
     return () => {
@@ -147,7 +142,6 @@ const Dashboard = () => {
       recurrence: info.event.extendedProps.recurrence,
     };
 
-    // Navigate to EditEventPage with state
     navigate("/edit-event", { state: { event: clickedEvent } });
   };
 
@@ -250,6 +244,8 @@ const Dashboard = () => {
             right: "",
           }}
           height={500} // Calendar height
+          firstDay={1} // Start week on Monday
+          hiddenDays={[6, 0]} // Hide Saturday and Sunday
           eventClick={handleEventClick}
         />
       </div>
