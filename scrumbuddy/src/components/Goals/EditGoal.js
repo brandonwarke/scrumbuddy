@@ -1,42 +1,55 @@
-// src/components/Goals/EditGoal.js
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import "./Goals.css";
 
 const EditGoal = () => {
-  const { id } = useParams();
-  const [goal, setGoal] = useState(null);
+  const { id } = useParams(); // Get goal ID from the route
+  const location = useLocation(); // Get state passed during navigation
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchGoal = async () => {
-      const goalRef = doc(db, "goals", id);
-      const goalSnap = await getDoc(goalRef);
+  const [goal, setGoal] = useState(location.state?.goal || null); // Use state or fallback to null
 
-      if (goalSnap.exists()) {
-        setGoal(goalSnap.data());
+  useEffect(() => {
+    const fetchGoalFromFirestore = async () => {
+      if (!goal) {
+        console.log("No goal in state. Fetching goal from Firestore...");
+        try {
+          const docRef = doc(db, "goals", id);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            setGoal({ id: docSnap.id, ...docSnap.data() });
+          } else {
+            console.error("Goal not found in Firestore.");
+            navigate("/dashboard");
+          }
+        } catch (error) {
+          console.error("Error fetching goal from Firestore:", error);
+          navigate("/dashboard");
+        }
       } else {
-        console.log("No such goal!");
+        console.log("Goal loaded from navigation state:", goal);
       }
     };
 
-    fetchGoal();
-  }, [id]);
+    fetchGoalFromFirestore();
+  }, [goal, id, navigate]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
 
     try {
-      await updateDoc(doc(db, "goals", id), {
+      console.log("Updating goal:", goal);
+      await updateDoc(doc(db, "goals", goal.id), {
         goalName: goal.goalName,
         description: goal.description,
         progress: goal.progress,
       });
       navigate("/dashboard");
-    } catch (e) {
-      console.error("Error updating goal: ", e);
+    } catch (error) {
+      console.error("Error updating goal:", error);
     }
   };
 
@@ -44,23 +57,33 @@ const EditGoal = () => {
 
   return (
     <form className="goal-form" onSubmit={handleUpdate}>
-      <input
-        type="text"
-        value={goal.goalName}
-        onChange={(e) => setGoal({ ...goal, goalName: e.target.value })}
-        required
-      />
-      <textarea
-        value={goal.description}
-        onChange={(e) => setGoal({ ...goal, description: e.target.value })}
-      />
-      <input
-        type="number"
-        value={goal.progress}
-        onChange={(e) => setGoal({ ...goal, progress: Number(e.target.value) })}
-        min="0"
-        max="100"
-      />
+      <h2>Edit Goal</h2>
+      <label>
+        Goal Name:
+        <input
+          type="text"
+          value={goal.goalName}
+          onChange={(e) => setGoal({ ...goal, goalName: e.target.value })}
+          required
+        />
+      </label>
+      <label>
+        Description:
+        <textarea
+          value={goal.description}
+          onChange={(e) => setGoal({ ...goal, description: e.target.value })}
+        />
+      </label>
+      <label>
+        Progress:
+        <input
+          type="number"
+          value={goal.progress}
+          onChange={(e) => setGoal({ ...goal, progress: Number(e.target.value) })}
+          min="0"
+          max="100"
+        />
+      </label>
       <button type="submit">Update Goal</button>
     </form>
   );

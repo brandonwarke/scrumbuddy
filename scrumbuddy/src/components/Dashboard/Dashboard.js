@@ -7,8 +7,9 @@ import {
   query,
   where,
   onSnapshot,
-  deleteDoc,
   doc,
+  updateDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -24,6 +25,7 @@ import {
   Cell,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { subMonths, startOfToday } from "date-fns";
 import "./Dashboard.css";
 
 const generateRecurringEvents = (events) => {
@@ -34,15 +36,14 @@ const generateRecurringEvents = (events) => {
   const expandedEvents = [];
 
   events.forEach((event) => {
-    const eventDate = new Date(event.start); // Use `start` field as the base date
+    const eventDate = new Date(event.start);
 
     while (eventDate <= endDate) {
       expandedEvents.push({
         ...event,
-        start: eventDate.toISOString(), // Use ISO format for FullCalendar
+        start: eventDate.toISOString(),
       });
 
-      // Handle recurrence
       if (event.recurrence === "daily") {
         eventDate.setDate(eventDate.getDate() + 1);
       } else if (event.recurrence === "weekly") {
@@ -52,7 +53,7 @@ const generateRecurringEvents = (events) => {
       } else if (event.recurrence === "monthly") {
         eventDate.setMonth(eventDate.getMonth() + 1);
       } else {
-        break; // No recurrence
+        break;
       }
     }
   });
@@ -63,6 +64,7 @@ const generateRecurringEvents = (events) => {
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [completedGoals, setCompletedGoals] = useState([]);
   const [events, setEvents] = useState([]);
   const [user] = useAuthState(auth);
   const navigate = useNavigate();
@@ -70,6 +72,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
 
+    // Fetch tasks
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -93,15 +96,34 @@ const Dashboard = () => {
       setTasks(tasksArray);
     });
 
+    // Fetch ongoing goals
     const goalsQuery = query(collection(db, "goals"), where("userId", "==", user.uid));
     const unsubscribeGoals = onSnapshot(goalsQuery, (querySnapshot) => {
       const goalsArray = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setGoals(goalsArray);
+      setGoals(goalsArray.filter((goal) => goal.progress < 100));
     });
 
+    // Fetch completed goals for the past quarter
+    const pastQuarter = subMonths(startOfToday(), 3);
+    const completedGoalsQuery = query(
+      collection(db, "goals"),
+      where("userId", "==", user.uid),
+      where("status", "==", "completed"),
+      where("completedAt", ">=", pastQuarter)
+    );
+
+    const unsubscribeCompletedGoals = onSnapshot(completedGoalsQuery, (querySnapshot) => {
+      const completedGoalsArray = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setCompletedGoals(completedGoalsArray);
+    });
+
+    // Fetch events
     const eventsQuery = query(
       collection(db, "calendarEvents"),
       where("userId", "==", user.uid)
@@ -114,35 +136,29 @@ const Dashboard = () => {
         start: doc.data().date + "T" + doc.data().time,
         recurrence: doc.data().recurrence,
       }));
-
       setEvents(generateRecurringEvents(fetchedEvents));
     });
 
     return () => {
       unsubscribeTasks();
       unsubscribeGoals();
+      unsubscribeCompletedGoals();
       unsubscribeEvents();
     };
   }, [user]);
 
-  const markAsDone = async (taskId) => {
+  const updateGoalProgress = async (goalId, progress) => {
     try {
-      await deleteDoc(doc(db, "tasks", taskId));
-      console.log("Task successfully deleted!");
-    } catch (e) {
-      console.error("Error deleting task: ", e);
+      const goalRef = doc(db, "goals", goalId);
+      const updates = { progress };
+      if (progress === 100) {
+        updates.status = "completed";
+        updates.completedAt = serverTimestamp();
+      }
+      await updateDoc(goalRef, updates);
+    } catch (error) {
+      console.error("Error updating goal:", error);
     }
-  };
-
-  const handleEventClick = (info) => {
-    const clickedEvent = {
-      id: info.event.id,
-      title: info.event.title,
-      start: info.event.start.toISOString(),
-      recurrence: info.event.extendedProps.recurrence,
-    };
-
-    navigate("/edit-event", { state: { event: clickedEvent } });
   };
 
   const todayTasks = tasks.filter(
@@ -177,7 +193,6 @@ const Dashboard = () => {
                 <h5>{task.taskName}</h5>
                 <p>{task.description}</p>
                 <p>Priority: {task.priority}</p>
-                <button onClick={() => markAsDone(task.id)}>Mark as Done</button>
               </div>
             ))
           )}
@@ -193,7 +208,6 @@ const Dashboard = () => {
                 <h5>{task.taskName}</h5>
                 <p>{task.description}</p>
                 <p>Priority: {task.priority}</p>
-                <button onClick={() => markAsDone(task.id)}>Mark as Done</button>
               </div>
             ))
           )}
@@ -203,31 +217,56 @@ const Dashboard = () => {
       {/* Goals Section */}
       <div className="goals-section">
         <h3>Your Goals Progress</h3>
-        {goals.length === 0 ? (
-          <p>No goals set.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={goals}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="goalName" />
-              <YAxis domain={[0, 100]} />
-              <Tooltip />
-              <Bar
-                dataKey="progress"
-                onClick={(data) => navigate(`/goals/edit/${data.id}`)}
+        <div className="goals-content">
+          <div className="goals-chart">
+            {goals.length === 0 ? (
+              <p>No goals set.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={goals}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="goalName" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Bar
+               dataKey="progress"
+                onClick={(data) => {
+                  console.log("Navigating to goal edit page with data:", data); // Debug log
+                  navigate(`/goals/${data.id}/edit`, { state: { goal: data } }); // Pass the entire goal data
+                }}
                 style={{ cursor: "pointer" }}
               >
-                {goals.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                ))}
-                <LabelList dataKey="progress" position="top" />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
+
+
+
+                    {goals.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                    ))}
+                    <LabelList dataKey="progress" position="top" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+          <div className="completed-goals">
+            <h4>Completed Goals (Past Quarter)</h4>
+            <ul>
+              {completedGoals.length === 0 ? (
+                <p>No completed goals in the past quarter.</p>
+              ) : (
+                completedGoals.map((goal) => (
+                  <li key={goal.id}>
+                    <strong>{goal.goalName}</strong> - Completed on:{" "}
+                    {new Date(goal.completedAt.seconds * 1000).toLocaleDateString()}
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Calendar Section */}
@@ -235,18 +274,16 @@ const Dashboard = () => {
         <h3>Scrum Calendar</h3>
         <FullCalendar
           plugins={[timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek" // Weekly view
+          initialView="timeGridWeek"
           events={events}
-          allDaySlot={false} // Disable all-day slot
+          allDaySlot={false}
           headerToolbar={{
             left: "",
             center: "title",
             right: "",
           }}
-          height={500} // Calendar height
-          firstDay={1} // Start week on Monday
-          hiddenDays={[6, 0]} // Hide Saturday and Sunday
-          eventClick={handleEventClick}
+          height={500}
+          hiddenDays={[0, 6]} // Hide Saturday and Sunday
         />
       </div>
     </div>
