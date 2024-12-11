@@ -232,16 +232,13 @@ const Dashboard = () => {
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <Bar
-               dataKey="progress"
-                onClick={(data) => {
-                  console.log("Navigating to goal edit page with data:", data); // Debug log
-                  navigate(`/goals/${data.id}/edit`, { state: { goal: data } }); // Pass the entire goal data
-                }}
-                style={{ cursor: "pointer" }}
-              >
-
-
-
+                  dataKey="progress"
+                  onClick={(data) => {
+                    console.log("Navigating to goal edit page with data:", data); // Debug log
+                    navigate(`/goals/edit/${data.id}`, { state: { goal: data } }); // Pass goal data in state
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
                     {goals.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                     ))}

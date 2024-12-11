@@ -5,32 +5,29 @@ import { db } from "../../firebase";
 import "./Goals.css";
 
 const EditGoal = () => {
-  const { id } = useParams(); // Get goal ID from the route
-  const location = useLocation(); // Get state passed during navigation
+  const { id } = useParams(); // Get goal ID from URL
+  const location = useLocation(); // Get state from navigate
   const navigate = useNavigate();
 
-  const [goal, setGoal] = useState(location.state?.goal || null); // Use state or fallback to null
+  const [goal, setGoal] = useState(location.state?.goal || null); // Check for state
 
   useEffect(() => {
     const fetchGoalFromFirestore = async () => {
       if (!goal) {
-        console.log("No goal in state. Fetching goal from Firestore...");
+        console.log("Fetching goal from Firestore...");
         try {
-          const docRef = doc(db, "goals", id);
-          const docSnap = await getDoc(docRef);
-
+          const goalDoc = doc(db, "goals", id);
+          const docSnap = await getDoc(goalDoc);
           if (docSnap.exists()) {
             setGoal({ id: docSnap.id, ...docSnap.data() });
           } else {
-            console.error("Goal not found in Firestore.");
+            console.error("Goal not found!");
             navigate("/dashboard");
           }
         } catch (error) {
-          console.error("Error fetching goal from Firestore:", error);
+          console.error("Error fetching goal:", error);
           navigate("/dashboard");
         }
-      } else {
-        console.log("Goal loaded from navigation state:", goal);
       }
     };
 
@@ -39,9 +36,7 @@ const EditGoal = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-
     try {
-      console.log("Updating goal:", goal);
       await updateDoc(doc(db, "goals", goal.id), {
         goalName: goal.goalName,
         description: goal.description,
