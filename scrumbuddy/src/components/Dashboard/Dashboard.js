@@ -2,7 +2,14 @@ import React, { useEffect, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { collection, query, where, onSnapshot, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import {
@@ -132,6 +139,18 @@ const Dashboard = () => {
     }
   };
 
+  const handleEventClick = (info) => {
+    const clickedEvent = {
+      id: info.event.id,
+      title: info.event.title,
+      start: info.event.start.toISOString(),
+      recurrence: info.event.extendedProps.recurrence,
+    };
+
+    // Navigate to EditEventPage with state
+    navigate("/edit-event", { state: { event: clickedEvent } });
+  };
+
   const todayTasks = tasks.filter(
     (task) => task.dueDate === new Date().toISOString().split("T")[0]
   );
@@ -231,6 +250,7 @@ const Dashboard = () => {
             right: "",
           }}
           height={500} // Calendar height
+          eventClick={handleEventClick}
         />
       </div>
     </div>

@@ -10,6 +10,7 @@ import Auth from "../Login/Auth";
 import SignUp from "../Login/SignUp"; // Make sure to import the SignUp component
 import EditGoal from "../Goals/EditGoal";
 import CalendarPage from '../Calendar/CalendarPage';
+import EditEventPage from "../Calendar/EditEventPage";
 
 import ProtectedRoute from "../ProtectedRoute/ProtectedRoute";
 import "./App.css";
@@ -34,6 +35,8 @@ const App = () => {
                       <Route path="/tasks" element={<Tasks />} />
                       <Route path="/goals" element={<GoalForm />} />
                       <Route path="/goals/edit/:id" element={<EditGoal />} />
+                      <Route path="/edit-event" element={<EditEventPage />} />
+
                       <Route path="/calendar" element={<CalendarPage />} />
                       <Route path="/" element={<Dashboard />} />
                     </Routes>
