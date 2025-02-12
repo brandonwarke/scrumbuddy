@@ -9,6 +9,7 @@ const TaskForm = () => {
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("Medium");
+  const [error, setError] = useState(null);
   const [user] = useAuthState(auth); // Get the logged-in user
 
   const handleSubmit = async (e) => {
@@ -43,8 +44,10 @@ const TaskForm = () => {
       setDescription("");
       setDueDate("");
       setPriority("Medium");
+      setError(null);
     } catch (e) {
       console.error("Error adding document: ", e);
+      setError(e);
     }
   };
 
@@ -73,6 +76,9 @@ const TaskForm = () => {
         <option value="Low">Low</option>
       </select>
       <button type="submit">Add Task</button>
+      {error && (
+        <div role="alert">Error adding document: {error.message}</div>
+      )}
     </form>
   );
 };

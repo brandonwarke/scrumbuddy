@@ -1,7 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore"; // Import Firestore
-import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth"; // Import Authentication
 
 // Your web app's Firebase configuration
@@ -17,7 +16,17 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Conditionally initialize Analytics only if not in a test environment
+if (process.env.NODE_ENV !== "test") {
+  try {
+    // Dynamically require analytics to avoid issues in test environments
+    const { getAnalytics } = require("firebase/analytics");
+    getAnalytics(app);
+  } catch (error) {
+    console.warn("Analytics initialization error:", error);
+  }
+}
 
 // Initialize Firebase Authentication
 const auth = getAuth(app);
