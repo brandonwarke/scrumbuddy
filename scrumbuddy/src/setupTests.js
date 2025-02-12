@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom';
+
 // src/setupTests.js
 import { ReadableStream } from "stream/web"; // Node 18+ built-in polyfill
 

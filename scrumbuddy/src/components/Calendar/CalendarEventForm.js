@@ -7,7 +7,7 @@ const CalendarEventForm = () => {
   const [eventName, setEventName] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [recurrence, setRecurrence] = useState("none"); // Recurrence state
+  const [recurrence, setRecurrence] = useState("none");
   const [user] = useAuthState(auth);
 
   const handleSubmit = async (e) => {
@@ -27,7 +27,7 @@ const CalendarEventForm = () => {
       eventName,
       date,
       time,
-      recurrence, // Add recurrence type
+      recurrence,
       userId: user.uid,
       createdAt: new Date(),
     };
@@ -36,7 +36,7 @@ const CalendarEventForm = () => {
       await addDoc(collection(db, "calendarEvents"), newEvent);
       console.log("Event added:", newEvent);
 
-      // Clear form
+      // Clear form fields
       setEventName("");
       setDate("");
       setTime("");
@@ -57,12 +57,14 @@ const CalendarEventForm = () => {
       />
       <input
         type="date"
+        placeholder="Date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
         required
       />
       <input
         type="time"
+        placeholder="Time"
         value={time}
         onChange={(e) => setTime(e.target.value)}
         required

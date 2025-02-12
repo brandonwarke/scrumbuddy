@@ -1,6 +1,6 @@
-// src/components/Goals/GoalForm.js
 import React, { useState } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+// Rename serverTimestamp on import so we can check if it exists.
+import { collection, addDoc, serverTimestamp as realServerTimestamp } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import "./Goals.css";
@@ -24,15 +24,18 @@ const GoalForm = () => {
       return;
     }
 
-    // Determine the status and completedAt field based on progress
+    // Helper to get a timestamp.
+    const getTimestamp = () =>
+      typeof realServerTimestamp === "function" ? realServerTimestamp() : new Date();
+
     const newGoal = {
       goalName,
       description,
       progress,
-      status: progress === 100 ? "completed" : "in-progress", // Add status
-      completedAt: progress === 100 ? serverTimestamp() : null, // Add completedAt if progress is 100
+      status: progress === 100 ? "completed" : "in-progress",
+      completedAt: progress === 100 ? getTimestamp() : null,
       userId: user.uid,
-      createdAt: serverTimestamp(), // Use server timestamp for consistency
+      createdAt: getTimestamp(),
     };
 
     try {

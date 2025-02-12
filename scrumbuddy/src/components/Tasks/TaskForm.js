@@ -10,10 +10,10 @@ const TaskForm = () => {
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("Medium");
   const [error, setError] = useState(null);
-  const [user] = useAuthState(auth); // Get the logged-in user
+  const [user] = useAuthState(auth);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent the form from refreshing
+    e.preventDefault();
 
     if (!taskName) {
       console.error("Task name is required");
@@ -30,16 +30,14 @@ const TaskForm = () => {
       description,
       dueDate,
       priority,
-      userId: user.uid, // Associate the task with the logged-in user
+      userId: user.uid,
       createdAt: new Date(),
     };
 
     try {
-      // Add the task to Firestore
       const docRef = await addDoc(collection(db, "tasks"), newTask);
       console.log("Document written with ID: ", docRef.id);
 
-      // Clear the form fields after successful submission
       setTaskName("");
       setDescription("");
       setDueDate("");
@@ -77,7 +75,9 @@ const TaskForm = () => {
       </select>
       <button type="submit">Add Task</button>
       {error && (
-        <div role="alert">Error adding document: {error.message}</div>
+        <div role="alert" aria-label="Error adding document:">
+          Error adding document: {error.message}
+        </div>
       )}
     </form>
   );
