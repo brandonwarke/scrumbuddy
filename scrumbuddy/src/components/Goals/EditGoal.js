@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import "./Goals.css";
 
@@ -48,6 +48,19 @@ const EditGoal = () => {
     }
   };
 
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this goal?");
+    if (confirmDelete) {
+      try {
+        await deleteDoc(doc(db, "goals", goal.id));
+        console.log("Goal deleted successfully");
+        navigate("/dashboard");
+      } catch (error) {
+        console.error("Error deleting goal:", error);
+      }
+    }
+  };
+
   if (!goal) return <p>Loading...</p>;
 
   return (
@@ -80,6 +93,20 @@ const EditGoal = () => {
         />
       </label>
       <button type="submit">Update Goal</button>
+      <button
+        type="button"
+        onClick={handleDelete}
+        style={{
+          backgroundColor: "red",
+          color: "white",
+          border: "none",
+          padding: "10px 20px",
+          cursor: "pointer",
+          marginTop: "10px",
+        }}
+      >
+        Delete Goal
+      </button>
     </form>
   );
 };

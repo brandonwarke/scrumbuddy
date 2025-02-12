@@ -9,6 +9,7 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase";
@@ -25,7 +26,6 @@ import {
   Cell,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
-import { subMonths, startOfToday } from "date-fns";
 import "./Dashboard.css";
 
 const generateRecurringEvents = (events) => {
@@ -106,13 +106,11 @@ const Dashboard = () => {
       setGoals(goalsArray.filter((goal) => goal.progress < 100));
     });
 
-    // Fetch completed goals for the past quarter
-    const pastQuarter = subMonths(startOfToday(), 3);
+    // Fetch completed goals
     const completedGoalsQuery = query(
       collection(db, "goals"),
       where("userId", "==", user.uid),
-      where("status", "==", "completed"),
-      where("completedAt", ">=", pastQuarter)
+      where("status", "==", "completed")
     );
 
     const unsubscribeCompletedGoals = onSnapshot(completedGoalsQuery, (querySnapshot) => {
@@ -120,6 +118,7 @@ const Dashboard = () => {
         id: doc.id,
         ...doc.data(),
       }));
+      console.log("Fetched completed goals:", completedGoalsArray); // Debug log
       setCompletedGoals(completedGoalsArray);
     });
 
@@ -153,11 +152,28 @@ const Dashboard = () => {
       const updates = { progress };
       if (progress === 100) {
         updates.status = "completed";
-        updates.completedAt = serverTimestamp();
+        updates.completedAt = serverTimestamp(); // Add timestamp
       }
       await updateDoc(goalRef, updates);
+      console.log("Goal updated with:", updates);
     } catch (error) {
-      console.error("Error updating goal:", error);
+      console.error("Error updating goal:", error.message, error);
+    }
+  };
+
+  const deleteCompletedGoal = async (goalId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this completed goal?"
+    );
+    if (confirmDelete) {
+      try {
+        await deleteDoc(doc(db, "goals", goalId));
+        setCompletedGoals((prevGoals) =>
+          prevGoals.filter((goal) => goal.id !== goalId)
+        );
+      } catch (error) {
+        console.error("Error deleting completed goal:", error.message, error);
+      }
     }
   };
 
@@ -182,7 +198,6 @@ const Dashboard = () => {
       {/* Tasks Section */}
       <div className="tasks-box">
         <h3>Tasks for the Next 2 Days</h3>
-
         <div className="tasks-day-section">
           <h4>Today</h4>
           {todayTasks.length === 0 ? (
@@ -197,7 +212,6 @@ const Dashboard = () => {
             ))
           )}
         </div>
-
         <div className="tasks-day-section">
           <h4>Tomorrow</h4>
           {tomorrowTasks.length === 0 ? (
@@ -232,13 +246,12 @@ const Dashboard = () => {
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <Bar
-                  dataKey="progress"
-                  onClick={(data) => {
-                    console.log("Navigating to goal edit page with data:", data); // Debug log
-                    navigate(`/goals/edit/${data.id}`, { state: { goal: data } }); // Pass goal data in state
-                  }}
-                  style={{ cursor: "pointer" }}
-                >
+                    dataKey="progress"
+                    onClick={(data) => {
+                      navigate(`/goals/edit/${data.id}`, { state: { goal: data } });
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
                     {goals.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                     ))}
@@ -249,15 +262,30 @@ const Dashboard = () => {
             )}
           </div>
           <div className="completed-goals">
-            <h4>Completed Goals (Past Quarter)</h4>
+            <h4>Completed Goals</h4>
             <ul>
               {completedGoals.length === 0 ? (
-                <p>No completed goals in the past quarter.</p>
+                <p>No completed goals.</p>
               ) : (
                 completedGoals.map((goal) => (
                   <li key={goal.id}>
                     <strong>{goal.goalName}</strong> - Completed on:{" "}
-                    {new Date(goal.completedAt.seconds * 1000).toLocaleDateString()}
+                    {goal.completedAt?.seconds
+                      ? new Date(goal.completedAt.seconds * 1000).toLocaleDateString()
+                      : "Unknown"}
+                    <button
+                      onClick={() => deleteCompletedGoal(goal.id)}
+                      style={{
+                        marginLeft: "10px",
+                        backgroundColor: "red",
+                        color: "white",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "5px 10px",
+                      }}
+                    >
+                      Delete
+                    </button>
                   </li>
                 ))
               )}
